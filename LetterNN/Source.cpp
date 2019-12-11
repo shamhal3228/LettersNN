@@ -24,12 +24,12 @@ struct data_one {//данные для обучения
 class network {
 public:
 	int layers;//кол-во слоев
+	int* size;//кол-во нейронов в слое
 	neuron** neurons;//двумерный массив нейронов
 	double*** weights;//веса нейронов([слой][номер нейрона][номер связи нейрона со следующим слоем])
-	int* size;//кол-во нейронов в слое
 	int threadsNum = 1;//кол-во потоков
 
-	double sigm_proizvodnaya(double x) {
+	double sigm_proizvodnaya(double x) {//производная функции активации, понадобится при ошмбках нейросети
 		if ((fabs(x - 1) < 1e-9) || (fabs(x) < 1e-9)) return 0.0;
 		double res = x * (1.0 - x);
 		return res;
@@ -79,7 +79,7 @@ public:
 		}
 	}
 
-	void set_input(double p[]) {//принимает входные значения для нейросети (от 0 до 255(оттенки цвета лежат в таком диапозоне, в нашем случае- серый)) и присываивает их нейрону
+	void set_input(double p[]) {//принимает входные значения для нейросети (от 0 до 255(оттенки цвета лежат в таком диапозоне, в нашем случае- серый)) и присваивает их нейрону
 		for (int i = 0; i < size[0]; i++) {
 			neurons[0][i].value = p[i];
 		}
@@ -92,7 +92,7 @@ public:
 		}
 	}
 
-	void ForwardFeeder(int LayerNumber, int start, int stop) {//производит процесс ForwardFeed (разносидность нейросети, когда нейроны передают информацию от входа к выходу
+	void ForwardFeeder(int LayerNumber, int start, int stop) {//производит процесс ForwardFeed (разносидность нейросети, когда нейроны передают информацию от входа к выходу напрямую
 		for (int j = start; j < stop; j++) {
 			for (int k = 0; k < size[LayerNumber - 1]; k++) {
 				neurons[LayerNumber][j].value += neurons[LayerNumber - 1][k].value * weights[LayerNumber - 1][k][j];
@@ -172,7 +172,6 @@ public:
 						else {
 							neurons[i][j].error = pow(1.0 - neurons[i][j].value, 2);
 						}
-
 					}
 				}
 				else { //далее это значение идет обратно к скрытым нейронам, где идет суммирование входящих ошибок
@@ -222,7 +221,7 @@ int main() {
 	srand(time(0));
 	setlocale(LC_ALL, "Russian");
 	ifstream fin;
-	const int l = 4;//layers
+	const int l = 4;//layers-слой
 	const int input_l = 4096;//изображение 64х64
 	int size[l] = { input_l, 256, 64, 26 }; //4096 разделить на кол-во слоев в квадрате=256, а потом 256/4=64, а 26, т.к. букв в английском алфавите 26
 	network nn;
@@ -230,7 +229,7 @@ int main() {
 	double input[input_l];//массив значений для нейронов
 	char rresult; //right result
 	double result; //результат, порлученный при обучении нейросети
-	double ra = 0; //right answer
+	double ra = 0; //right answer- кол-во угаданных букв
 	int maxra = 0; //max right answer. максимальное кол-во угаданных букв
 	int maxraepoch = 0;//нужно будет для отслежки последней эпохи, где угадано максимальное кол-во букв
 	const int n = 83;
@@ -251,7 +250,7 @@ int main() {
 		}
 
 		nn.setLayers(l, size);//устанавливаем слои и нужные веса
-		for (int e = 0; ra / n * 100 < 100; e++) { //e- epoch(эпоха). По сути, этот цикл будет "идти", пока точность нейросети не будет 100% в угадывании "учительских "
+		for (int e = 0; ra / n * 100 < 100; e++) { //e- epoch(эпоха). По сути, этот цикл будет "идти", пока точность нейросети не будет 100% в угадывании "учительских" букв
 
 			ra = 0; //каждый раз обнуляем rightanswer для новой эпохи обучения
 
