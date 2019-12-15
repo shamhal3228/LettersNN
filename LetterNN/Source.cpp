@@ -232,7 +232,7 @@ int main() {
 	double ra = 0; //right answer- кол-во угаданных букв
 	int maxra = 0; //max right answer. максимальное кол-во угаданных букв
 	int maxraepoch = 0;//нужно будет для отслежки последней эпохи, где угадано максимальное кол-во букв
-	const int n = 83;
+	const int n = 128;
 	bool to_study = 0;
 	cout << "Производить обучение?";
 	cin >> to_study;
